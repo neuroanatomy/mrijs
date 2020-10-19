@@ -8,7 +8,7 @@ function MRI() {
     //struct_url: 'http://localhost/structjs/struct.js',
     //pako_url: 'http://localhost/libs/pako/1.0.5/pako.js',
     struct_url: 'https://cdn.jsdelivr.net/gh/neuroanatomy/structjs@0.0.1/struct.js',
-    pako_url: 'https://cdn.jsdelivr.net/npm/pako@1.0.10/dist/pako.min.js',
+    pako_url: 'https://cdn.jsdelivr.net/npm/pako@1.0.11/dist/pako.min.js',
     // script loader
     loadScript: function loadScript(path, testScriptPresent) {
       var pr = new Promise(function(resolve, reject) {
@@ -234,7 +234,14 @@ function MRI() {
           // decompress data
           var niigz = this.response;
           var inflate = new pako.Inflate();
-          inflate.push(new Uint8Array(niigz), true);
+          try {
+            inflate.push(new Uint8Array(niigz), true);
+          } catch(err) {
+            return reject(err);
+          }
+          if(inflate.ended !== true) {
+            return reject(new Error("File ended prematurely"));
+          }
           var nii = inflate.result.buffer;
           me.parseNifti(nii);
           me.mriPath = path;
@@ -276,7 +283,14 @@ function MRI() {
           if(compressed) {
             var niigz = this.result;
             var inflate = new pako.Inflate();
-            inflate.push(new Uint8Array(niigz), true);
+            try {
+              inflate.push(new Uint8Array(niigz), true);
+            } catch(err) {
+              return reject(err);
+            }
+            if(inflate.ended !== true) {
+              return reject(new Error("File ended prematurely"));
+            }
             nii = inflate.result.buffer;
           } else {
             nii = this.result;
